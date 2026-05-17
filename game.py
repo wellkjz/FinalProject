@@ -1,273 +1,623 @@
 import pygame
 import random
+import os
 
 pygame.init()
+pygame.mixer.init()
 
 WIDTH = 400
 HEIGHT = 600
-
 FPS = 60
 
 GRAVITY = 0.5
 JUMP_FORCE = -12
 PLAYER_SPEED = 5
 
-WHITE = (245, 245, 245)
-BLACK = (20, 20, 20)
-BLUE = (70, 140, 255)
-GREEN = (80, 200, 120)
+PLATFORM_W = 80
+PLATFORM_H = 12
+GAP_Y = 90
+
+LEFT_X = 50
+RIGHT_X = WIDTH - 130
+
+GREEN = (70, 200, 120)
 DARK_GREEN = (40, 120, 70)
+BLUE = (80, 140, 255)
+PURPLE = (180, 70, 255)
+GOLD = (255, 215, 0)
 RED = (220, 70, 70)
-YELLOW = (255, 220, 90)
 SKY = (135, 206, 235)
+BLACK = (0, 0, 0)
+BROWN = (120, 70, 30)
+GRAY = (180, 180, 180)
+DARK_RED = (160, 30, 30)
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Pixel Jump")
+ENEMY_SCORE_THRESHOLD = 2000
+ENEMY_SPAWN_INTERVAL_MIN = 120  # frames
+ENEMY_SPAWN_INTERVAL_MAX = 300  # frames
+INVINCIBILITY_FRAMES = 90       # ~1.5 seconds of invincibility after hit
 
-clock = pygame.time.Clock()
 
-font = pygame.font.SysFont("consolas", 30)
+def load_sound(path):
+    try:
+        return pygame.mixer.Sound(path)
+    except:
+        return None
 
-# =========================
-# PLAYER
-# =========================
 
-player = pygame.Rect(180, 500, 30, 30)
+class Game:
 
-player_y_velocity = 0
+    def __init__(self):
 
-# =========================
-# PLATFORMS
-# =========================
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Jump Game")
 
-platforms = []
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("consolas", 24)
+        self.font_small = pygame.font.SysFont("consolas", 18)
 
-for i in range(10):
-    x = random.randint(0, WIDTH - 80)
-    y = HEIGHT - i * 60
-    platforms.append(pygame.Rect(x, y, 80, 12))
+        self.jump_sound = load_sound("sounds/jump.wav")
+        self.coin_sound = load_sound("sounds/coin.wav")
+        self.bad_sound = load_sound("sounds/bad.wav")
+        self.boost_sound = load_sound("sounds/boost.wav")
 
-# =========================
-# ENEMIES
-# =========================
+        self.state = "menu"
 
-enemies = []
+        self.best_score = self.load_best_score()
 
-for i in range(3):
-    x = random.randint(0, WIDTH - 30)
-    y = random.randint(50, HEIGHT - 200)
-    enemies.append(pygame.Rect(x, y, 25, 25))
+        self.reset_game()
 
-# =========================
-# BOOSTERS
-# =========================
+    # =========================
+    # SAVE SYSTEM
+    # =========================
 
-boosters = []
+    def clear_best_score(self):
 
-for i in range(3):
-    x = random.randint(0, WIDTH - 20)
-    y = random.randint(50, HEIGHT - 300)
-    boosters.append(pygame.Rect(x, y, 20, 10))
+        self.best_score = 0
 
-# =========================
-# GAME VARIABLES
-# =========================
+        with open("best_score.txt", "w") as f:
+            f.write("0")
 
-score = 0
+    def load_best_score(self):
 
-game_over = False
+        if not os.path.exists("best_score.txt"):
+            return 0
 
-# =========================
-# GAME LOOP
-# =========================
+        with open("best_score.txt", "r") as f:
+            return int(f.read())
 
-running = True
+    def save_best_score(self):
 
-while running:
+        with open("best_score.txt", "w") as f:
+            f.write(str(self.best_score))
 
-    clock.tick(FPS)
+    # =========================
+    # RESET GAME
+    # =========================
 
-    # EVENTS
-    for event in pygame.event.get():
+    def reset_game(self):
 
-        if event.type == pygame.QUIT:
-            running = False
+        self.player = pygame.Rect(WIDTH // 2, HEIGHT - 120, 25, 25)
 
-    keys = pygame.key.get_pressed()
+        self.vel_y = 0
+
+        self.score = 0
+
+        self.lives = 3
+        self.invincibility_timer = 0
+
+        self.platforms = []
+        self.stars = []
+        self.enemies = []
+
+        self.gravity = GRAVITY
+
+        # Timer for random enemy spawning
+        self.enemy_spawn_timer = 0
+        self.enemy_spawn_interval = random.randint(
+            ENEMY_SPAWN_INTERVAL_MIN, ENEMY_SPAWN_INTERVAL_MAX
+        )
+
+        self.generate_world()
+
+    # =========================
+    # STAR
+    # =========================
+
+    class Star:
+
+        def __init__(self, x, y, kind):
+            self.rect = pygame.Rect(x, y, 18, 18)
+            self.kind = kind
+
+        def draw(self, screen):
+
+            if self.kind == "gold":
+                color = GOLD
+            elif self.kind == "blue":
+                color = BLUE
+            else:
+                color = PURPLE
+
+            cx, cy = self.rect.center
+
+            points = [
+                (cx, cy - 10),
+                (cx + 3, cy - 3),
+                (cx + 10, cy - 3),
+                (cx + 5, cy + 2),
+                (cx + 7, cy + 10),
+                (cx, cy + 5),
+                (cx - 7, cy + 10),
+                (cx - 5, cy + 2),
+                (cx - 10, cy - 3),
+                (cx - 3, cy - 3)
+            ]
+
+            pygame.draw.polygon(screen, color, points)
+            pygame.draw.polygon(screen, BLACK, points, 2)
+
+    # =========================
+    # ENEMY (BIRD)
+    # =========================
+
+    class Enemy:
+
+        def __init__(self, y):
+
+            self.width = 35
+            self.height = 20
+
+            self.direction = random.choice(["left", "right"])
+
+            if self.direction == "left":
+                self.x = WIDTH
+                self.speed = random.randint(3, 6) * -1
+            else:
+                self.x = -40
+                self.speed = random.randint(3, 6)
+
+            self.y = y
+
+            self.rect = pygame.Rect(
+                self.x,
+                self.y,
+                self.width,
+                self.height
+            )
+
+        def update(self):
+
+            self.rect.x += self.speed
+
+        def draw(self, screen):
+
+            body = pygame.Rect(
+                self.rect.x,
+                self.rect.y,
+                self.width,
+                self.height
+            )
+
+            wing1 = [
+                (self.rect.x + 5, self.rect.y + 10),
+                (self.rect.x - 5, self.rect.y),
+                (self.rect.x + 10, self.rect.y + 5)
+            ]
+
+            wing2 = [
+                (self.rect.x + 25, self.rect.y + 10),
+                (self.rect.x + 40, self.rect.y),
+                (self.rect.x + 20, self.rect.y + 5)
+            ]
+
+            pygame.draw.ellipse(screen, BROWN, body)
+            pygame.draw.polygon(screen, BLACK, wing1)
+            pygame.draw.polygon(screen, BLACK, wing2)
+
+    # =========================
+    # CREATE OBJECTS
+    # =========================
+
+    def create_pair(self, y):
+
+        left = pygame.Rect(LEFT_X, y, PLATFORM_W, PLATFORM_H)
+        right = pygame.Rect(RIGHT_X, y, PLATFORM_W, PLATFORM_H)
+
+        self.platforms.append(left)
+        self.platforms.append(right)
+
+        kinds = ["gold", "blue"]
+
+        if random.random() < 0.3:
+            kinds[random.randint(0, 1)] = "purple"
+
+        self.stars.append(self.Star(LEFT_X + 30, y - 20, kinds[0]))
+        self.stars.append(self.Star(RIGHT_X + 30, y - 20, kinds[1]))
+
+    def create_single(self, y):
+
+        x = random.randint(40, WIDTH - 120)
+
+        self.platforms.append(
+            pygame.Rect(x, y, PLATFORM_W, PLATFORM_H)
+        )
+
+    def generate_world(self):
+
+        self.platforms.append(
+            pygame.Rect(WIDTH // 2 - 40, HEIGHT - 60, PLATFORM_W, PLATFORM_H)
+        )
+
+        y = HEIGHT - 60 - GAP_Y
+
+        for i in range(11):
+
+            if random.random() < 0.3:
+                self.create_pair(y)
+            else:
+                self.create_single(y)
+
+            y -= GAP_Y
+
+    # =========================
+    # SPAWN RANDOM ENEMY
+    # =========================
+
+    def try_spawn_enemy(self):
+        """Spawn a bird at a random Y position visible on screen."""
+
+        if self.score < ENEMY_SCORE_THRESHOLD:
+            return
+
+        self.enemy_spawn_timer += 1
+
+        if self.enemy_spawn_timer >= self.enemy_spawn_interval:
+
+            self.enemy_spawn_timer = 0
+            self.enemy_spawn_interval = random.randint(
+                ENEMY_SPAWN_INTERVAL_MIN, ENEMY_SPAWN_INTERVAL_MAX
+            )
+
+            # Spawn at a random vertical position within the visible screen
+            spawn_y = random.randint(60, HEIGHT - 100)
+            self.enemies.append(self.Enemy(spawn_y))
+
+    # =========================
+    # DRAW HEARTS
+    # =========================
+
+    def draw_hearts(self):
+        """Draw 3 hearts in the top-right corner."""
+
+        heart_size = 20
+        spacing = 26
+        start_x = WIDTH - 10 - (3 * spacing)
+        y = 12
+
+        for i in range(3):
+            x = start_x + i * spacing
+            cx = x + heart_size // 2
+            cy = y + heart_size // 2
+
+            color = RED if i < self.lives else GRAY
+
+            # Draw heart shape using two circles + triangle
+            r = heart_size // 4
+
+            pygame.draw.circle(self.screen, color, (cx - r, cy - 2), r)
+            pygame.draw.circle(self.screen, color, (cx + r, cy - 2), r)
+            pygame.draw.polygon(self.screen, color, [
+                (cx - heart_size // 2, cy),
+                (cx + heart_size // 2, cy),
+                (cx, cy + heart_size // 2)
+            ])
 
     # =========================
     # UPDATE
     # =========================
 
-    if not game_over:
+    def update(self):
 
-        # movement
+        # Tick invincibility
+        if self.invincibility_timer > 0:
+            self.invincibility_timer -= 1
+
+        keys = pygame.key.get_pressed()
+
         if keys[pygame.K_LEFT]:
-            player.x -= PLAYER_SPEED
+            self.player.x -= PLAYER_SPEED
 
         if keys[pygame.K_RIGHT]:
-            player.x += PLAYER_SPEED
+            self.player.x += PLAYER_SPEED
 
-        # gravity
-        player_y_velocity += GRAVITY
-        player.y += player_y_velocity
+        if self.player.x < -30:
+            self.player.x = WIDTH
 
-        # screen wrap
-        if player.x < -30:
-            player.x = WIDTH
+        if self.player.x > WIDTH:
+            self.player.x = -30
 
-        if player.x > WIDTH:
-            player.x = -30
+        self.vel_y += self.gravity
+        self.player.y += self.vel_y
 
-        # collision with platforms
-        for platform in platforms:
+        # PLATFORM COLLISION
+        for p in self.platforms:
 
-            if player.colliderect(platform):
+            if self.player.colliderect(p) and self.vel_y > 0:
 
-                if player_y_velocity > 0:
-                    player_y_velocity = JUMP_FORCE
+                self.vel_y = JUMP_FORCE
 
-        # collision with enemies
-        for enemy in enemies:
+                if self.jump_sound:
+                    self.jump_sound.play()
 
-            if player.colliderect(enemy):
-                game_over = True
+        # STAR COLLISION
+        for s in self.stars[:]:
 
-        # collision with boosters
-        for booster in boosters:
+            if self.player.colliderect(s.rect):
 
-            if player.colliderect(booster):
-                player_y_velocity = -20
+                if s.kind == "gold":
 
-        # scrolling world
-        if player.y < HEIGHT // 3:
+                    self.score += 1000
 
-            scroll = HEIGHT // 3 - player.y
-            player.y = HEIGHT // 3
+                    if self.coin_sound:
+                        self.coin_sound.play()
 
-            score += scroll
+                elif s.kind == "blue":
 
-            for platform in platforms:
-                platform.y += scroll
+                    self.score -= 200
 
-            for enemy in enemies:
-                enemy.y += scroll
+                    if self.bad_sound:
+                        self.bad_sound.play()
 
-            for booster in boosters:
-                booster.y += scroll
+                    if self.score < 0:
+                        self.score = 0
 
-        # remove old platforms
-        platforms = [p for p in platforms if p.y < HEIGHT]
+                elif s.kind == "purple":
 
-        # generate new platforms
-        while len(platforms) < 10:
+                    self.vel_y = -25
 
-            x = random.randint(0, WIDTH - 80)
-            y = random.randint(-50, 0)
+                    if self.boost_sound:
+                        self.boost_sound.play()
 
-            platforms.append(
-                pygame.Rect(x, y, 80, 12)
-            )
+                self.stars.remove(s)
 
-        # move enemies
-        for enemy in enemies:
-            enemy.x += random.choice([-1, 1])
+        # TRY SPAWN RANDOM ENEMY
+        self.try_spawn_enemy()
 
-        # game over
-        if player.y > HEIGHT:
-            game_over = True
+        # ENEMY UPDATE
+        for enemy in self.enemies[:]:
+
+            enemy.update()
+
+            # HIT PLAYER (only if not invincible)
+            if self.player.colliderect(enemy.rect) and self.invincibility_timer == 0:
+
+                self.lives -= 1
+                self.invincibility_timer = INVINCIBILITY_FRAMES
+
+                if self.bad_sound:
+                    self.bad_sound.play()
+
+                if self.lives <= 0:
+
+                    self.state = "game_over"
+
+                    if self.score > self.best_score:
+                        self.best_score = self.score
+                        self.save_best_score()
+
+            # REMOVE ENEMY
+            if enemy.rect.x < -100 or enemy.rect.x > WIDTH + 100:
+                self.enemies.remove(enemy)
+
+        # CAMERA MOVEMENT
+        if self.player.y < HEIGHT // 3:
+
+            diff = HEIGHT // 3 - self.player.y
+
+            self.player.y = HEIGHT // 3
+
+            self.score += diff
+
+            for p in self.platforms:
+                p.y += diff
+
+            for s in self.stars:
+                s.rect.y += diff
+
+            for enemy in self.enemies:
+                enemy.rect.y += diff
+
+        # REMOVE OLD OBJECTS
+        self.platforms = [p for p in self.platforms if p.y < HEIGHT]
+        self.stars = [s for s in self.stars if s.rect.y < HEIGHT]
+        self.enemies = [e for e in self.enemies if e.rect.y < HEIGHT]
+
+        # GENERATE NEW PLATFORMS
+        while len(self.platforms) < 18:
+
+            highest = min(self.platforms, key=lambda p: p.y)
+
+            new_y = highest.y - GAP_Y
+
+            if random.random() < 0.25:
+                self.create_pair(new_y)
+            else:
+                self.create_single(new_y)
+
+        # GAME OVER (fell off screen)
+        if self.player.y > HEIGHT:
+
+            self.state = "game_over"
+
+            if self.score > self.best_score:
+                self.best_score = self.score
+                self.save_best_score()
 
     # =========================
     # DRAW
     # =========================
 
-    screen.fill(SKY)
+    def draw(self):
 
-    # clouds
-    pygame.draw.circle(screen, WHITE, (80, 100), 30)
-    pygame.draw.circle(screen, WHITE, (120, 100), 25)
+        self.screen.fill(SKY)
 
-    # platforms
-    for platform in platforms:
+        # PLATFORMS
+        for p in self.platforms:
+            pygame.draw.rect(self.screen, GREEN, p)
+            pygame.draw.rect(self.screen, DARK_GREEN, p, 2)
 
-        pygame.draw.rect(screen, GREEN, platform)
+        # STARS
+        for s in self.stars:
+            s.draw(self.screen)
 
-        pygame.draw.rect(
-            screen,
-            DARK_GREEN,
-            platform,
-            3
+        # ENEMIES
+        for enemy in self.enemies:
+            enemy.draw(self.screen)
+
+        # PLAYER — blink when invincible
+        if self.invincibility_timer == 0 or (self.invincibility_timer // 6) % 2 == 0:
+            pygame.draw.rect(self.screen, RED, self.player)
+            pygame.draw.rect(self.screen, BLACK, self.player, 2)
+
+        # TEXT
+        self.screen.blit(
+            self.font.render(f"Score: {self.score}", True, BLACK),
+            (10, 10)
         )
 
-    # enemies
-    for enemy in enemies:
-
-        pygame.draw.rect(screen, RED, enemy)
-
-        pygame.draw.rect(screen, BLACK, enemy, 2)
-
-    # boosters
-    for booster in boosters:
-
-        pygame.draw.rect(screen, YELLOW, booster)
-
-        pygame.draw.rect(screen, BLACK, booster, 2)
-
-    # player
-    pygame.draw.rect(screen, BLUE, player)
-
-    pygame.draw.rect(screen, BLACK, player, 3)
-
-    # eyes
-    pygame.draw.rect(
-        screen,
-        WHITE,
-        (player.x + 6, player.y + 8, 5, 5)
-    )
-
-    pygame.draw.rect(
-        screen,
-        WHITE,
-        (player.x + 18, player.y + 8, 5, 5)
-    )
-
-    # score
-    score_text = font.render(
-        f"Score: {score}",
-        True,
-        BLACK
-    )
-
-    screen.blit(score_text, (10, 10))
-
-    # game over
-    if game_over:
-
-        over_text = font.render(
-            "GAME OVER",
-            True,
-            RED
+        self.screen.blit(
+            self.font.render(f"Best: {self.best_score}", True, BLACK),
+            (10, 40)
         )
 
-        restart_text = pygame.font.SysFont(
-            "consolas",
-            20
-        ).render(
-            "Close window to exit",
-            True,
-            BLACK
-        )
+        # HEARTS
+        self.draw_hearts()
 
-        screen.blit(
-            over_text,
-            (WIDTH // 2 - 100, HEIGHT // 2)
-        )
+        # HINT: birds appear after 5000
+        if self.score < ENEMY_SCORE_THRESHOLD:
+            remaining = ENEMY_SCORE_THRESHOLD - self.score
+            hint = self.font_small.render(
+                f"Birds at {ENEMY_SCORE_THRESHOLD}! ({remaining} away)", True, DARK_RED
+            )
+            self.screen.blit(hint, (WIDTH // 2 - hint.get_width() // 2, HEIGHT - 28))
 
-        screen.blit(
-            restart_text,
-            (WIDTH // 2 - 110, HEIGHT // 2 + 40)
-        )
+    # =========================
+    # MENU
+    # =========================
 
-    pygame.display.update()
+    def draw_menu(self):
 
-pygame.quit()
+        self.screen.fill(SKY)
+
+        title = self.font.render("JUMP GAME", True, BLACK)
+        self.screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 180))
+
+        start = self.font.render("SPACE - START", True, BLACK)
+        self.screen.blit(start, (WIDTH // 2 - start.get_width() // 2, 280))
+
+        info = self.font_small.render("Avoid birds! You have 3 lives.", True, DARK_RED)
+        self.screen.blit(info, (WIDTH // 2 - info.get_width() // 2, 340))
+
+        # Draw example hearts
+        self.lives = 3
+        self.draw_hearts()
+
+    # =========================
+    # GAME OVER
+    # =========================
+
+    def draw_game_over(self):
+
+        self.screen.fill(SKY)
+
+        go = self.font.render("GAME OVER", True, RED)
+        self.screen.blit(go, (WIDTH // 2 - go.get_width() // 2, 160))
+
+        score_text = self.font.render(f"Score: {self.score}", True, BLACK)
+        self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 210))
+
+        best_text = self.font.render(f"Best: {self.best_score}", True, BLACK)
+        self.screen.blit(best_text, (WIDTH // 2 - best_text.get_width() // 2, 240))
+
+        restart = self.font.render("SPACE - Restart", True, BLACK)
+        self.screen.blit(restart, (WIDTH // 2 - restart.get_width() // 2, 300))
+
+        menu = self.font.render("ENTER - Menu", True, BLACK)
+        self.screen.blit(menu, (WIDTH // 2 - menu.get_width() // 2, 340))
+
+        clr = self.font_small.render("BACKSPACE - Clear Best", True, BLACK)
+        self.screen.blit(clr, (WIDTH // 2 - clr.get_width() // 2, 385))
+
+        # Show 0 hearts on game over
+        self.lives = 0
+        self.draw_hearts()
+
+    # =========================
+    # MAIN LOOP
+    # =========================
+
+    def run(self):
+
+        running = True
+
+        while running:
+
+            self.clock.tick(FPS)
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    running = False
+
+                if event.type == pygame.KEYDOWN:
+
+                    # MENU
+                    if self.state == "menu":
+
+                        if event.key == pygame.K_SPACE:
+
+                            self.reset_game()
+                            self.state = "playing"
+
+                    # GAME OVER
+                    elif self.state == "game_over":
+
+                        # RESTART
+                        if event.key == pygame.K_SPACE:
+
+                            self.reset_game()
+                            self.state = "playing"
+
+                        # MENU
+                        elif event.key == pygame.K_RETURN:
+
+                            self.state = "menu"
+
+                        # CLEAR SCORE
+                        elif event.key == pygame.K_BACKSPACE:
+
+                            self.clear_best_score()
+
+            # DRAW STATES
+            if self.state == "menu":
+
+                self.draw_menu()
+
+            elif self.state == "game_over":
+
+                self.draw_game_over()
+
+            else:
+
+                self.update()
+                self.draw()
+
+            pygame.display.update()
+
+        pygame.quit()
+
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
