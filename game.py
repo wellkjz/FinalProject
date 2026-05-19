@@ -109,8 +109,7 @@ class Game:
 
         # Coin collision
         for c in self.level.coins[:]:
-
-            if self.player.rect.colliderect(c.rect):
+            if self.player.collect_rect.colliderect(c.rect):
 
                 # GOLD STAR (+1000)
                 if c.kind == "gold":
@@ -144,7 +143,7 @@ class Game:
 
         # Booster collision
         for b in self.level.boosters[:]:
-            if self.player.rect.colliderect(b.rect):
+            if self.player.collect_rect.colliderect(b.rect):   # <-- must be inside the loop
                 self.player.vel_y = BOOST_VEL
                 if self.snd_boost:
                     self.snd_boost.play()
