@@ -1,5 +1,7 @@
 import pygame
-from settings import BLACK, RED, GRAY, DARK_RED, WIDTH, HEIGHT, ENEMY_SCORE_THRESHOLD
+from settings import BLACK, RED, GRAY, DARK_RED, GOLD, WIDTH, HEIGHT, ENEMY_SCORE_THRESHOLD
+
+_COIN_DARK = (139, 90, 10)
 
 
 class HUD:
@@ -8,9 +10,16 @@ class HUD:
         self.font       = font
         self.font_small = font_small
 
-    def draw(self, score, best_score, lives):
+    def draw(self, score, best_score, lives, coins):
+        # Счёт
         self.screen.blit(self.font.render(f"Score: {score}",      True, BLACK), (10, 10))
         self.screen.blit(self.font.render(f"Best:  {best_score}", True, BLACK), (10, 40))
+
+        # Монетки (иконка + число)
+        self._draw_coin_icon(10, 72)
+        coin_surf = self.font_small.render(f"x {coins}", True, _COIN_DARK)
+        self.screen.blit(coin_surf, (30, 74))
+
         self.draw_hearts(lives)
 
         if score < ENEMY_SCORE_THRESHOLD:
@@ -19,6 +28,13 @@ class HUD:
                 f"Birds at {ENEMY_SCORE_THRESHOLD}! ({remaining} away)", True, DARK_RED
             )
             self.screen.blit(hint, (WIDTH // 2 - hint.get_width() // 2, HEIGHT - 28))
+
+    def _draw_coin_icon(self, x, y):
+        """Маленькая монетка рядом со счётчиком."""
+        r    = 8
+        body = pygame.Rect(x, y, r * 2, r * 2)
+        pygame.draw.ellipse(self.screen, GOLD,      body)
+        pygame.draw.ellipse(self.screen, _COIN_DARK, body, 2)
 
     def draw_hearts(self, lives):
         size    = 20

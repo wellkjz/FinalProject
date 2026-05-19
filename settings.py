@@ -38,6 +38,7 @@ WHITE      = (240, 240, 240)
 BROWN      = (120,  70,  30)
 GRAY       = (180, 180, 180)
 YELLOW     = (255, 220,  90)
+BRICK_COLOR = (70, 37, 125)
 
 # ========================
 # ENEMY
@@ -52,6 +53,7 @@ INVINCIBILITY_FRAMES     = 90    # ~1.5 sec
 # ========================
 COIN_GOLD_VALUE   = 1000
 COIN_BLUE_PENALTY = 200
+COIN_VALUE = 5
 
 # ========================
 # SOUND PATHS
