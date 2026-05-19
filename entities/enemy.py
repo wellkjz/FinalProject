@@ -3,7 +3,8 @@ import random
 from settings import WIDTH
 
 class Enemy:
-    FRAME_COUNT = 6
+    FRAME_COUNT = 6   # fixed, known from your sheet
+
     def __init__(self, y):
         direction = random.choice(["left", "right"])
         if direction == "left":
@@ -12,16 +13,22 @@ class Enemy:
         else:
             x = -40
             speed = random.randint(3, 6)
+
         self.speed = speed
         self.direction = direction
+
+        # Load and scale the sprite sheet
         self.sheet = pygame.image.load("assets/bird_sheet.png").convert_alpha()
 
-        SCALE = 0.05
+        SCALE = 0.05  # adjust this until the bird fits your game
         new_w = int(self.sheet.get_width() * SCALE)
         new_h = int(self.sheet.get_height() * SCALE)
         self.sheet = pygame.transform.scale(self.sheet, (new_w, new_h))
+
         self.FRAME_WIDTH = new_w // self.FRAME_COUNT
         self.FRAME_HEIGHT = new_h
+
+        # Extract frames
         self.frames = []
         for i in range(self.FRAME_COUNT):
             frame = self.sheet.subsurface(
@@ -41,7 +48,7 @@ class Enemy:
     def update(self):
         self.rect.x += self.speed
         self.animation_timer += 1
-        if self.animation_timer >= 5:
+        if self.animation_timer >= 5:  # adjust speed by changing this number
             self.animation_timer = 0
             self.current_frame = (self.current_frame + 1) % self.FRAME_COUNT
 
