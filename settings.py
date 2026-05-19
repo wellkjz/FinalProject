@@ -1,25 +1,26 @@
 # ========================
 # WINDOW
 # ========================
-WIDTH = 400
+WIDTH  = 400
 HEIGHT = 600
-FPS = 60
+FPS    = 60
 
 # ========================
 # PHYSICS
 # ========================
-GRAVITY = 0.5
-JUMP_FORCE = -12
+GRAVITY      = 0.5
+JUMP_FORCE   = -12
 PLAYER_SPEED = 5
+BOOST_VEL    = -25
 
 # ========================
 # PLATFORM
 # ========================
 PLATFORM_W = 80
 PLATFORM_H = 12
-GAP_Y = 90
-LEFT_X = 50
-RIGHT_X = WIDTH - 130   # 270
+GAP_Y      = 90
+LEFT_X     = 50
+RIGHT_X    = WIDTH - 130  # 270
 
 # ========================
 # COLORS
@@ -44,4 +45,23 @@ YELLOW     = (255, 220,  90)
 ENEMY_SCORE_THRESHOLD    = 2000
 ENEMY_SPAWN_INTERVAL_MIN = 120   # frames
 ENEMY_SPAWN_INTERVAL_MAX = 300   # frames
-INVINCIBILITY_FRAMES     = 90    # ~1.5 секунды
+INVINCIBILITY_FRAMES     = 90    # ~1.5 sec
+
+# ========================
+# SCORE VALUES
+# ========================
+COIN_GOLD_VALUE   = 1000
+COIN_BLUE_PENALTY = 200
+
+# ========================
+# SOUND PATHS
+# ========================
+SOUND_JUMP  = "assets/sounds/jump.wav"
+SOUND_COIN  = "assets/sounds/coin.wav"
+SOUND_BAD   = "assets/sounds/bad.wav"
+SOUND_BOOST = "assets/sounds/boost.wav"
+
+# ========================
+# SAVE
+# ========================
+HIGHSCORE_FILE = "data/highscore.json"

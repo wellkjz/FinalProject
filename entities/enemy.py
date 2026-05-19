@@ -1,31 +1,32 @@
 import pygame
 import random
-
 from settings import WIDTH, BROWN, BLACK
 
 
 class Enemy:
+    W = 35
+    H = 20
+
     def __init__(self, y):
-        self.width = 35
-        self.height = 20
-        self.direction = random.choice(["left", "right"])
-
-        if self.direction == "left":
-            self.x = WIDTH
-            self.speed = random.randint(3, 6) * -1
+        direction = random.choice(["left", "right"])
+        if direction == "left":
+            x     = WIDTH
+            speed = random.randint(3, 6) * -1
         else:
-            self.x = -40
-            self.speed = random.randint(3, 6)
+            x     = -40
+            speed = random.randint(3, 6)
 
-        self.y = y
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.rect  = pygame.Rect(x, y, self.W, self.H)
+        self.speed = speed
 
     def update(self):
         self.rect.x += self.speed
 
-    def draw(self, screen):
-        body = pygame.Rect(self.rect.x, self.rect.y, self.width, self.height)
+    def is_offscreen(self):
+        return self.rect.x < -100 or self.rect.x > WIDTH + 100
 
+    def draw(self, screen):
+        body  = pygame.Rect(self.rect.x, self.rect.y, self.W, self.H)
         wing1 = [
             (self.rect.x + 5,  self.rect.y + 10),
             (self.rect.x - 5,  self.rect.y),
@@ -36,7 +37,6 @@ class Enemy:
             (self.rect.x + 40, self.rect.y),
             (self.rect.x + 20, self.rect.y + 5),
         ]
-
         pygame.draw.ellipse(screen, BROWN, body)
         pygame.draw.polygon(screen, BLACK, wing1)
         pygame.draw.polygon(screen, BLACK, wing2)
