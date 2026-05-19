@@ -11,7 +11,6 @@ class LevelGenerator:
         self.coins     = []
         self.boosters  = []
 
-    # ---- generation ----
     def generate_world(self):
         self.platforms.append(Platform(WIDTH // 2 - 40, HEIGHT - 60))
         y = HEIGHT - 60 - GAP_Y
@@ -37,18 +36,25 @@ class LevelGenerator:
             if kind == "purple":
                 self.boosters.append(Booster(x, y - 20))
             else:
-                self.coins.append(Coin(x, y - 20, kind))
+                self.coins.append(Coin(x, y - 24, kind))
 
     def _create_single(self, y):
         x = random.randint(40, WIDTH - 120)
         self.platforms.append(Platform(x, y))
 
-    # ---- camera ----
+        if random.random() < 0.6:
+            coin_x = x + 30
+            self.coins.append(Coin(coin_x, y - 26, "coin"))
+
     def scroll(self, diff):
         for obj in self.platforms + self.coins + self.boosters:
             obj.rect.y += diff
 
-    # ---- lifecycle ----
+    def update(self):
+        """Обновить анимацию монеток."""
+        for c in self.coins:
+            c.update()
+
     def cleanup(self):
         self.platforms = [p for p in self.platforms if p.rect.y < HEIGHT]
         self.coins     = [c for c in self.coins     if c.rect.y < HEIGHT]
@@ -59,7 +65,6 @@ class LevelGenerator:
             highest = min(self.platforms, key=lambda p: p.rect.y)
             self._add_row(highest.rect.y - GAP_Y)
 
-    # ---- draw ----
     def draw(self, screen):
         for obj in self.platforms + self.coins + self.boosters:
             obj.draw(screen)

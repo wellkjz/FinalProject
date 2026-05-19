@@ -1,3 +1,4 @@
+
 import pygame
 import random
 
@@ -7,14 +8,14 @@ from settings import (
     ENEMY_SPAWN_INTERVAL_MIN, ENEMY_SPAWN_INTERVAL_MAX,
     SOUND_JUMP, SOUND_COIN, SOUND_BAD, SOUND_BOOST,
 )
-from entities.player         import Player
-from entities.enemy          import Enemy
-from systems.scoring         import ScoreSystem
+from entities.player import Player
+from entities.enemy import Enemy
+from systems.scoring import ScoreSystem
 from systems.level_generator import LevelGenerator
-from systems.save_system     import SaveSystem
-from ui.hud                  import HUD
-from ui.menu                 import MenuScreen
-from ui.game_over            import GameOverScreen
+from systems.save_system import SaveSystem
+from ui.hud import HUD
+from ui.menu import MenuScreen
+from ui.game_over import GameOverScreen
 
 
 def _load_sound(path):
@@ -47,15 +48,17 @@ class Game:
 
         # Systems
         self.save_sys   = SaveSystem()
-        self.best_score = self.save_sys.load()
+        self.best_score, self.total_coins = self.save_sys.load()
+
 
         # UI
-        self.hud            = HUD(self.screen, font, font_small)
-        self.menu_screen    = MenuScreen(self.screen, font, font_small)
+        self.hud = HUD(self.screen, font, font_small)
+        self.menu_screen = MenuScreen(self.screen, font, font_small)
         self.gameover_screen = GameOverScreen(self.screen, font, font_small)
 
         self.state   = "menu"
         self.scoring = ScoreSystem()
+        self.scoring.coins = self.total_coins
         self.level   = LevelGenerator()
         self.player  = None
         self.enemies = []
@@ -94,6 +97,7 @@ class Game:
     # UPDATE
     # ========================
     def update(self):
+        self.level.update()
         self.player.tick(GRAVITY)
 
         # Platform collision
@@ -105,11 +109,37 @@ class Game:
 
         # Coin collision
         for c in self.level.coins[:]:
+
             if self.player.rect.colliderect(c.rect):
-                self.scoring.collect_coin(c.kind)
-                sound = self.snd_coin if c.kind == "gold" else self.snd_bad
-                if sound:
-                    sound.play()
+
+                # GOLD STAR (+1000)
+                if c.kind == "gold":
+                    self.scoring.score += 1000
+
+                    if self.snd_coin:
+                        self.snd_coin.play()
+
+                # BLUE STAR (-200)
+                elif c.kind == "blue":
+                    self.scoring.score -= 200
+
+                    if self.snd_bad:
+                        self.snd_bad.play()
+
+                # PURPLE STAR (BOOST)
+                elif c.kind == "purple":
+                    self.player.vel_y = BOOST_VEL
+
+                    if self.snd_boost:
+                        self.snd_boost.play()
+
+                # REAL COIN
+                elif c.kind == "coin":
+                    self.scoring.coins += 5
+
+                    if self.snd_coin:
+                        self.snd_coin.play()
+
                 self.level.coins.remove(c)
 
         # Booster collision
@@ -153,8 +183,7 @@ class Game:
         self.state = "game_over"
         if self.scoring.score > self.best_score:
             self.best_score = self.scoring.score
-            self.save_sys.save(self.best_score)
-
+        self.save_sys.save(self.best_score, self.scoring.coins)
     # ========================
     # DRAW
     # ========================
@@ -164,7 +193,7 @@ class Game:
         for e in self.enemies:
             e.draw(self.screen)
         self.player.draw(self.screen)
-        self.hud.draw(self.scoring.score, self.best_score, self.player.lives)
+        self.hud.draw(self.scoring.score, self.best_score, self.player.lives, self.scoring.coins)
 
     # ========================
     # MAIN LOOP
