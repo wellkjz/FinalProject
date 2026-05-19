@@ -58,10 +58,10 @@ COIN_VALUE = 5
 # ========================
 # SOUND PATHS
 # ========================
-SOUND_JUMP  = "assets/sounds/jump.wav"
-SOUND_COIN  = "assets/sounds/coin.wav"
-SOUND_BAD   = "assets/sounds/bad.wav"
-SOUND_BOOST = "assets/sounds/boost.wav"
+SOUND_JUMP  = "sounds/jump.wav"
+SOUND_COIN  = "sounds/coin.wav"
+SOUND_BAD   = "sounds/bad.wav"
+SOUND_BOOST = "sounds/boost.wav"
 
 # ========================
 # SAVE
