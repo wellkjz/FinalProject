@@ -33,6 +33,9 @@ class Game:
         pygame.display.set_caption("Jump Game")
         self.clock  = pygame.time.Clock()
 
+        self.background = pygame.image.load("assets/background.png").convert()
+        self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
+
         font       = pygame.font.SysFont("consolas", 24)
         font_small = pygame.font.SysFont("consolas", 18)
 
@@ -156,7 +159,7 @@ class Game:
     # DRAW
     # ========================
     def draw(self):
-        self.screen.fill(SKY)
+        self.screen.blit(self.background, (0, 0))
         self.level.draw(self.screen)
         for e in self.enemies:
             e.draw(self.screen)
