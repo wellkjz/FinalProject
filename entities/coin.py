@@ -1,22 +1,24 @@
 import pygame
-from settings import GOLD, BLUE, BLACK
+from settings import GOLD, BLACK
 
-# Цвета пиксельной монетки
 _COIN_DARK   = (139,  90,  10)
 _COIN_MID    = (205, 140,  20)
 _COIN_LIGHT  = (255, 215,   0)
 _COIN_SHINE  = (255, 245, 150)
+
+_RED         = (220,  50,  50)
+_RED_DARK    = (140,  20,  20)
 
 
 class Coin:
     SIZE = 23
 
     _SPIN_WIDTHS = [1.0, 0.85, 0.6, 0.3, 0.05, 0.3, 0.6, 0.85]
-    _ANIM_SPEED  = 6   # тиков на фрейм
+    _ANIM_SPEED  = 6
 
     def __init__(self, x, y, kind="gold"):
         self.rect   = pygame.Rect(x, y, self.SIZE, self.SIZE)
-        self.kind   = kind          # "gold" | "blue" | "coin"
+        self.kind   = kind
         self._frame = 0
         self._tick  = 0
 
@@ -24,8 +26,8 @@ class Coin:
         if self.kind == "coin":
             self._tick += 1
             if self._tick >= self._ANIM_SPEED:
-                self._tick   = 0
-                self._frame  = (self._frame + 1) % len(self._SPIN_WIDTHS)
+                self._tick  = 0
+                self._frame = (self._frame + 1) % len(self._SPIN_WIDTHS)
 
     def _star_points(self):
         cx, cy = self.rect.center
@@ -38,10 +40,13 @@ class Coin:
         ]
 
     def _draw_star(self, screen):
-        color = GOLD if self.kind == "gold" else BLUE
-        pts   = self._star_points()
-        pygame.draw.polygon(screen, color, pts)
-        pygame.draw.polygon(screen, BLACK, pts, 2)
+        # gold star  →  gold fill
+        # blue star  →  red fill (penalty)
+        color      = GOLD  if self.kind == "gold" else _RED
+        outline    = BLACK if self.kind == "gold" else _RED_DARK
+        pts = self._star_points()
+        pygame.draw.polygon(screen, color,   pts)
+        pygame.draw.polygon(screen, outline, pts, 2)
 
     def _draw_coin(self, screen):
         cx, cy  = self.rect.center

@@ -1,0 +1,15 @@
+{
+  "owned_skins": [
+    "default",
+    "red",
+    "green",
+    "purple"
+  ],
+  "owned_bgs": [
+    "default",
+    "sunset",
+    "candy"
+  ],
+  "active_skin": "purple",
+  "active_bg": "candy"
+}
