@@ -133,8 +133,6 @@ bashpython -m unittest discover -s tests -v
 
 Screenshots
 
-(Add screenshots to an assets/screenshots/ folder and reference them here once captured.)
-
 Main Menu:
 <img width="502" height="790" alt="image" src="https://github.com/user-attachments/assets/abd525c4-ce2d-474d-a62d-e5bf943c9741" />
 
