@@ -119,6 +119,8 @@ In Game:
 
 
 Shop:
+<img width="502" height="790" alt="image" src="https://github.com/user-attachments/assets/3615fad1-e22a-4505-8d8f-2870913ee35a" />
+
 
 
 Game Over:
