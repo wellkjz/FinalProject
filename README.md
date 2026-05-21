@@ -26,6 +26,30 @@ Polished UI — animated menu, game-over screen with new-best detection, in-game
 Technologies Used
 TechnologyPurposePython 3.12Core languagePygame 2.6Game engine (rendering, input, audio)JSONSave data persistence (data/highscore.json, data/shop_data.json)unittestAutomated testing
 
+# OOP Concepts Used
+
+This project demonstrates several Object-Oriented Programming principles:
+
+## Encapsulation
+Game entities manage their own data and behavior inside classes.
+
+Example:
+- `Player`
+- `Enemy`
+- `Platform`
+
+---
+
+## Inheritance
+Game objects can inherit shared behavior from common base structures.
+
+---
+
+## Polymorphism
+Different objects implement common methods like:
+update()
+draw()
+
 Project Structure
 FinalProject_team/
 ├── main.py                  # Entry point
