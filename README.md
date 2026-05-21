@@ -122,7 +122,8 @@ Shop:
 
 
 Game Over:
-<img width="502" height="790" alt="image" src="https://github.com/user-attachments/assets/efc9e7ec-0ac7-4b45-8479-6d1bc10757a2" />
+<img width="502" height="790" alt="Game Over" src="https://github.com/user-attachments/assets/a2fc8ce7-9296-4c35-ac8a-93b1ba209517" />
+
 
 
 Team Member Roles
