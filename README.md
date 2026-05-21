@@ -1,4 +1,4 @@
-Jump Game 🎮
+# Jump Game 🎮
 A 2D endless vertical platformer built with Python and Pygame, developed as a team project for the Introduction to Programming 2 course at Astana IT University.
 
 Project Description
@@ -73,9 +73,9 @@ git clone https://github.com/wellkjz/FinalProject.git
 cd FinalProject
 2) Create a virtual environment
 python -m venv venv
-# Windows:
+Windows:
 venv\Scripts\activate
-# macOS / Linux:
+macOS / Linux:
 source venv/bin/activate
 3) Install dependencies
 pip install -r requirements.txt
