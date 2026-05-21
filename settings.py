@@ -85,54 +85,63 @@ SHOP_CHARACTERS = [
         "price": 0,
         "scale": 0.20,
     },
-    # ── Add your own characters below ──────────────────────────────────────
-    # {
-    #     "id":    "ninja",
-    #     "name":  "Ninja",
-    #     "image": "assets/ninja.png",
-    #     "price": 300,
-    #     "scale": 0.20,
-    # },
-    # {
-    #     "id":    "robot",
-    #     "name":  "Robot",
-    #     "image": "assets/robot.png",
-    #     "price": 500,
-    #     "scale": 0.18,
-    # },
+    {
+        "id": "pixel_eren",
+        "name": "Eren Yeager",
+        "price": 2000,
+        "image": "assets/eren.PNG",
+        "scale": 0.20,
+    },
+    {
+        "id": "pixel_mikasa",
+        "name": "Mikasa Ackerman",
+        "price": 2700,
+        "image": "assets/mikasa.PNG",
+        "scale": 0.20,
+    },
+    {
+        "id": "pixel_armin",
+        "name": "Armin Arlert",
+        "price": 2700,
+        "image": "assets/armin.PNG",
+        "scale": 0.20,
+    },
+    {
+        "id":    "pusheen",
+        "name":  "Harry Potter pusheen",
+        "image": "assets/pusheen.png",
+        "price": 3000,
+        "scale": 0.20,
+    },
+{
+        "id":    "ablay",
+        "name":  "Abilaykhan",
+        "image": "assets/ablay.png",
+        "price": 2500,
+        "scale": 0.20,
+    }
 ]
 
-# ========================
-# SHOP — BACKGROUNDS
-# Each entry:
-#   id        : unique string key
-#   name      : display name
-#   image     : path to PNG in assets/
-#   price     : coin cost  (0 = free / default)
-#   music     : path to music file in sounds/ (None = no music / silence)
-#               Supported formats: .ogg  .mp3  .wav
-# ========================
 SHOP_BACKGROUNDS = [
     {
         "id":    "default",
         "name":  "Sky",
         "image": "assets/background.png",
         "price": 0,
-        "music": None,          # put e.g. "sounds/music_sky.ogg" here
+        "music": "sounds/default_sound.mp3"
     },
-    # ── Add your own backgrounds below ─────────────────────────────────────
-    # {
-    #     "id":    "space",
-    #     "name":  "Space",
-    #     "image": "assets/bg_space.png",
-    #     "price": 200,
-    #     "music": "sounds/music_space.ogg",
-    # },
-    # {
-    #     "id":    "forest",
-    #     "name":  "Forest",
-    #     "image": "assets/bg_forest.png",
-    #     "price": 400,
-    #     "music": "sounds/music_forest.ogg",
-    # },
+    {
+        "id": "aot_bg",
+        "name": "Attack on Titan",
+        "price": 2500,
+        "image": "assets/aot_bg_png.JPG",
+        "music": "sounds/AOT_music.ogg",
+    },
+{
+        "id": "hp_bg",
+        "name": "Harry Potter",
+        "price": 3000,
+        "image": "assets/hastle.JPG",
+        "music": "sounds/harry_potter_music.mp3",
+    }
 ]
