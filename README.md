@@ -67,24 +67,11 @@ FinalProject_team/
 
 Installation
 Requirements: Python 3.10+ and pip.
-bash# 1. Clone the repository
-git clone https://github.com/wellkjz/FinalProject.git
-cd FinalProject
-
-# 2. (Recommended) Create a virtual environment
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# macOS / Linux:
-source venv/bin/activate
-
-# 3. Install dependencies
-pip install -r 
-
+bash
 1) Clone the repository
 git clone https://github.com/wellkjz/FinalProject.git
 cd FinalProject
-2) (Recommended) Create a virtual environment
+2) Create a virtual environment
 python -m venv venv
 # Windows:
 venv\Scripts\activate
@@ -93,7 +80,6 @@ source venv/bin/activate
 3) Install dependencies
 pip install -r requirements.txt
 
-requirements.txt
 requirements.txt contents:
 pygame>=2.6.0
 
@@ -101,7 +87,16 @@ How to Run
 bashpython main.py
 
 Controls
-KeyAction← / →Move left / rightSPACEStart game / confirm in shopSOpen shop (from main menu)TABSwitch tab in shop (Skins / Backgrounds)← / →Navigate shop itemsEEquip an owned itemESC / BACKSPACEClose shopENTERReturn to menu (from game over)BACKSPACEClear best score (from game over)
+KeyAction
+← / → Move left / right
+SPACE Start game / confirm in shop
+S Open shop (from main menu)
+TAB Switch tab in shop (Skins / Backgrounds)
+← / → Navigate shop items
+E Equip an owned item
+ESC / BACKSPACE Close shop
+ENTER Return to menu (from game over)
+BACKSPACE Clear best score (from game over)
 
 Adding Custom Skins and Backgrounds
 Skin: drop a PNG into assets/ named player_YOURID.png, then add an entry to SKINS in ui/shop.py:
